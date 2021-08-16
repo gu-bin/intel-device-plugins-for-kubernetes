@@ -20,7 +20,7 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
+//	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -36,7 +36,7 @@ import (
 const (
 	sysfsDrmDirectory = "/sys/class/drm"
 	devfsDriDirectory = "/dev/dri"
-	gpuDeviceRE       = `^card[0-9]+$`
+	gpuDeviceRE       = `^renderD[0-9]+$`
 	controlDeviceRE   = `^controlD[0-9]+$`
 	vendorString      = "0x8086"
 
@@ -127,15 +127,16 @@ func (dp *devicePlugin) isCompatibleDevice(name string) bool {
 		klog.V(4).Info("Not compatible device: ", name)
 		return false
 	}
-	dat, err := os.ReadFile(path.Join(dp.sysfsDir, name, "device/vendor"))
-	if err != nil {
-		klog.Warning("Skipping. Can't read vendor file: ", err)
-		return false
-	}
-	if strings.TrimSpace(string(dat)) != vendorString {
-		klog.V(4).Info("Non-Intel GPU: ", name)
-		return false
-	}
+	klog.Warning("vendor path: ", path.Join(dp.sysfsDir, name, "device/vendor"))
+	// dat, err := os.ReadFile(path.Join(dp.sysfsDir, name, "device/vendor"))
+	// if err != nil {
+	// 	klog.Warning("Skipping. Can't read vendor file: ", err)
+	// 	return false
+	// }
+	// if strings.TrimSpace(string(dat)) != vendorString {
+	// 	klog.V(4).Info("Non-Intel GPU: ", name)
+	// 	return false
+	// }
 	return true
 }
 
@@ -148,9 +149,11 @@ func (dp *devicePlugin) scan() (dpapi.DeviceTree, error) {
 	var monitor []pluginapi.DeviceSpec
 	devTree := dpapi.NewDeviceTree()
 	rmDevInfos := rm.NewDeviceInfoMap()
+	klog.Warning("dp.sysfsDir: ", dp.sysfsDir)
 	for _, f := range files {
 		var nodes []pluginapi.DeviceSpec
 
+		klog.Warning("f.Name(): ", f.Name())
 		if !dp.isCompatibleDevice(f.Name()) {
 			continue
 		}
